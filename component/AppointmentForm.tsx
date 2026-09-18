@@ -3,14 +3,17 @@
 import { useEffect, useState } from "react";
 import { api } from "@/lib/api";
 import type { Service } from "@/types";
-import { useRouter } from "next/navigation";
-import { Calendar } from "lucide-react";
+import { useRouter, useSearchParams } from "next/navigation";
+import { Calendar, Clock, Tag } from "lucide-react";
 
 export default function AppointmentForm() {
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const preselectedService = searchParams.get("service") ?? "";
+
   const [services, setServices] = useState<Service[]>([]);
   const [form, setForm] = useState({
-    customer_name: "", customer_phone: "", service: "", date: "", time: "", notes: "",
+    customer_name: "", customer_phone: "", service: preselectedService, date: "", time: "", notes: "",
   });
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
@@ -18,6 +21,8 @@ export default function AppointmentForm() {
   useEffect(() => {
     api.getServices().then(setServices).catch(() => {});
   }, []);
+
+  const selectedService = services.find((s) => s.id === Number(form.service));
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -50,7 +55,7 @@ export default function AppointmentForm() {
     <div className="mx-auto max-w-xl">
       <div className="mb-6 text-center">
         <div className="mb-2 inline-flex h-12 w-12 items-center justify-center rounded-xl bg-gradient-to-br from-indigo-500 to-indigo-600 text-2xl shadow-md shadow-indigo-200">
-          <Calendar size={28} className="text-white" />
+          <Calendar size={24} className="text-white" />
         </div>
         <h2 className="text-2xl font-bold tracking-tight text-gray-900">Book an Appointment</h2>
         <p className="mt-1 text-sm text-gray-500">Fill in the customer and service details below</p>
@@ -98,6 +103,21 @@ export default function AppointmentForm() {
               ))}
             </select>
           </div>
+
+          {selectedService && (
+            <div className="mb-4 flex items-center justify-between rounded-lg border border-indigo-100 bg-indigo-50 px-4 py-3">
+              <div>
+                <p className="text-sm font-semibold text-gray-900">{selectedService.name}</p>
+                <p className="mt-0.5 flex items-center gap-1 text-xs text-gray-500">
+                  <Clock size={12} /> {selectedService.duration} min
+                </p>
+              </div>
+              <div className="flex items-center gap-1 text-sm font-bold text-indigo-600">
+                <Tag size={14} />
+                NPR {selectedService.price.toLocaleString()}
+              </div>
+            </div>
+          )}
 
           <div className="grid gap-4 sm:grid-cols-2">
             <div>
